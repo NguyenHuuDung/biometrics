@@ -84,10 +84,10 @@ public class BiometricsBase: NSObject, FlutterPlugin {
           touchMe.typeBiometricsAuth { (configuredStr, cancelString, pleaseConfigureString,success,fail)  in
               if (self.touchMe.canEvaluatePolicy()) {
                   DispatchQueue.main.async {
-                    if (!isSwitch) {
-                        self.configWithSwitch(myString:configuredStr ?? "", isSwitch : isSwitch)
+                    if (isSwitch) {
+                       self.configWithSwitch(myString:cancelString ?? "", isSwitch : isSwitch)
                     } else {
-                        self.configWithSwitch(myString:cancelString ?? "", isSwitch : isSwitch)
+                        self.configWithSwitch(myString:configuredStr ?? "", isSwitch : isSwitch)
                     }
                   }
               }else {
@@ -104,9 +104,9 @@ public class BiometricsBase: NSObject, FlutterPlugin {
                   self.touchMe.typeBiometricsAuth { (configuredStr, cancelString, pleaseConfigureString,success,fail)  in
                       DispatchQueue.main.async {
                           if isSwitch {
-                               self.authenBiometricsOn(message:success)
+                             self.authenBiometricsOff(message:fail)
                           }else {
-                              self.authenBiometricsOff(message:fail)
+                             self.authenBiometricsOn(message:success)
                           }
                       }
                   }
