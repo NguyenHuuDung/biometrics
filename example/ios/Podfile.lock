@@ -1,0 +1,22 @@
+PODS:
+  - biometrics (0.0.1):
+    - Flutter
+  - Flutter (1.0.0)
+
+DEPENDENCIES:
+  - biometrics (from `.symlinks/plugins/biometrics/ios`)
+  - Flutter (from `Flutter`)
+
+EXTERNAL SOURCES:
+  biometrics:
+    :path: ".symlinks/plugins/biometrics/ios"
+  Flutter:
+    :path: Flutter
+
+SPEC CHECKSUMS:
+  biometrics: 7368d397a55578890571813895c1386f5c9b22e8
+  Flutter: 50d75fe2f02b26cc09d224853bb45737f8b3214a
+
+PODFILE CHECKSUM: aafe91acc616949ddb318b77800a7f51bffa2a4c
+
+COCOAPODS: 1.11.3
