@@ -103,7 +103,7 @@ public class BiometricsBase: NSObject, FlutterPlugin {
               if success {
                   self.touchMe.typeBiometricsAuth { (configuredStr, cancelString, pleaseConfigureString,success,fail)  in
                       DispatchQueue.main.async {
-                          if !isSwitch {
+                          if isSwitch {
                                self.authenBiometricsOn(message:success)
                           }else {
                               self.authenBiometricsOff(message:fail)
