@@ -1,8 +1,11 @@
 package com.example.biometrics
 
+import android.annotation.SuppressLint
 import android.content.ContentValues.TAG
-import android.content.Context
 import android.os.Build
+import android.security.keystore.KeyGenParameterSpec
+import android.security.keystore.KeyPermanentlyInvalidatedException
+import android.security.keystore.KeyProperties
 import android.util.Log
 import androidx.annotation.NonNull
 import androidx.annotation.RequiresApi
@@ -12,10 +15,18 @@ import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
 import io.flutter.plugin.common.MethodChannel
+import java.security.KeyStore
+import java.security.KeyStoreException
 import java.util.concurrent.Executor
+import javax.crypto.Cipher
+import javax.crypto.KeyGenerator
+import javax.crypto.SecretKey
 
 
 class Biometrics {
+    private val TRANSFORMATION = "AES/GCM/NoPadding"
+    private val ANDROID_KEY_STORE = "AndroidKeyStore"
+    private val ANDROID_KEY_NAME = "ANDROID_KEY_NAME"
     lateinit var channel : MethodChannel
     private lateinit var executor: Executor
     private lateinit var biometricPrompt: androidx.biometric.BiometricPrompt
@@ -30,23 +41,23 @@ class Biometrics {
                 super.onAuthenticationError(errorCode, errString)
                 when (errorCode) {
                     BiometricPrompt.ERROR_NO_DEVICE_CREDENTIAL -> {
-                        authenticateUserFail("Thông tin xác thực bảo mật không có sẵn.")
+                        authenticateUserFail("Thông tin xác thực bảo mật không có sẵn.","Error" )
                     }
                     BiometricPrompt.ERROR_NO_SPACE, BiometricPrompt.ERROR_NO_BIOMETRICS -> {
-                        authenticateUserFail("Vui lòng đăng ký ít nhất một dấu vân tay trong phần cài đặt màn hình khóa và bảo mật, trên thiết bị")
+                        authenticateUserFail("Vui lòng đăng ký ít nhất một dấu vân tay trong phần cài đặt màn hình khóa và bảo mật, trên thiết bị","Error")
                     }
                     BiometricPrompt.ERROR_HW_UNAVAILABLE, BiometricPrompt.ERROR_HW_NOT_PRESENT -> {
-                        authenticateUserFail("Thiết bị của bạn không hỗ trợ tính năng đăng nhập bằng vân tay")
+                        authenticateUserFail("Thiết bị của bạn không hỗ trợ tính năng đăng nhập bằng vân tay","Error")
                     }
                     BiometricPrompt.ERROR_LOCKOUT -> {
-                        authenticateUserFail("Vân tay bị khóa do quá nhiều lần thử. Điều này xảy ra sau 5 lần thử không thành công và kéo dài trong 30 giây.")
+                        authenticateUserFail("Vân tay bị khóa do quá nhiều lần thử. Điều này xảy ra sau 5 lần thử không thành công và kéo dài trong 30 giây.","Error")
                     }
 
                     BiometricPrompt.ERROR_LOCKOUT_PERMANENT -> {
-                        authenticateUserFail("Xác thực sinh trắc học bị tắt cho đến khi người dùng mở khóa bằng xác thực mạnh (PIN / Hình / Mật khẩu)")
+                        authenticateUserFail("Xác thực sinh trắc học bị tắt cho đến khi người dùng mở khóa bằng xác thực mạnh (PIN / Hình / Mật khẩu)","Error")
                     }
                     BiometricPrompt.ERROR_CANCELED ->  {
-                        authenticateUserFail("Huỷ bỏ xác thực vân tay")
+                        authenticateUserFail("Huỷ bỏ xác thực vân tay","Error")
                         return;
                     }
                 }
@@ -60,19 +71,22 @@ class Biometrics {
 
             override fun onAuthenticationSucceeded(result: androidx.biometric.BiometricPrompt.AuthenticationResult) {
                 super.onAuthenticationSucceeded(result)
+//                val encryptedInfo: ByteArray = result.cryptoObject.cipher?.doFinal(
+//                    plaintext-string.toByteArray(Charset.defaultCharset())
+//                )
+//                Log.d("MY_APP_TAG", "Encrypted information: " +
+//                        Arrays.toString(encryptedInfo))
                 if(isSwitch != "") {
-                    if (isSwitch.toBoolean()) {
+                    if (!isSwitch.toBoolean()) {
                         authenBiometricsOn("Bạn đã cài đặt vân tay thành công")
-                    } else if (!isSwitch.toBoolean()) {
+                    } else if (isSwitch.toBoolean()) {
                         authenBiometricsOff("Bạn đã huỷ cài đặt vân tay thành công")
                     }
                 }
                 if(isKeySave != "") {
                     if (isKeySave.toBoolean()) {
                         authenBiometricsOn("Bạn đăng nhập thành công")
-                    } else if (!isKeySave.toBoolean()) {
-                        authenBiometricsOff("Bạn đăng nhập không thành công")
-                    }
+                    } 
                 }
             }
         }
@@ -107,8 +121,8 @@ class Biometrics {
         channel.invokeMethod("canEvaluatePolicyFail", param)
     }
 
-    private fun authenticateUserFail(@NonNull message: String) {
-        val param = mapOf(Pair("message", message))
+    private fun authenticateUserFail(@NonNull message: String, type: String) {
+        val param = mapOf(Pair("message", message),Pair("type", type))
         channel.invokeMethod("authenticateUserFail", param)
     }
 
@@ -141,7 +155,7 @@ class Biometrics {
         return false
     }
 
-    fun configBiometric(isSwitch: Boolean, activity : FragmentActivity,channel : MethodChannel) {
+    fun configBiometric(isSwitch: Boolean, activity : FragmentActivity, channel : MethodChannel) {
         this.activity = activity
         this.channel = channel
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -153,7 +167,7 @@ class Biometrics {
                         promptInfo = createPromptInfo()
                         biometricPrompt.authenticate(promptInfo)
                     } catch (e: Exception) {
-                        canEvaluatePolicyFail("$e")
+                        authenticateUserFail("$e", "Error")
                     }
                 } else {
                     return
@@ -177,9 +191,15 @@ class Biometrics {
                         this.isSwitch = ""
                         biometricPrompt = createBiometricPrompt()
                         promptInfo = createPromptInfo()
-                        biometricPrompt.authenticate(promptInfo)
-                    } catch (e: Exception) {
-                        canEvaluatePolicyFail("$e")
+                        val cipher = getCipher()
+                        val secretKey = getSecretKey()
+                        cipher.init(Cipher.ENCRYPT_MODE, secretKey)
+                        biometricPrompt.authenticate(promptInfo,BiometricPrompt.CryptoObject(cipher))
+                    } catch (keyper : KeyPermanentlyInvalidatedException) {
+                        authenticateUserFail("$keyper", "Change")
+                        this.deleteKey()
+                    } catch ( e: Exception) {
+                        authenticateUserFail("$e", "Error")
                     }
                 } else {
                     return
@@ -193,5 +213,54 @@ class Biometrics {
     }
 
 
+    @RequiresApi(Build.VERSION_CODES.M)
+    private fun generateSecretKey(): SecretKey  {
+        val keyGenerator = KeyGenerator.getInstance(
+            KeyProperties.KEY_ALGORITHM_AES, ANDROID_KEY_STORE)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            keyGenerator.init(KeyGenParameterSpec.Builder(
+                ANDROID_KEY_NAME,
+                KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT)
+                .setBlockModes(KeyProperties.BLOCK_MODE_CBC)
+                .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_PKCS7)
+                .setUserAuthenticationRequired(true)
+                .setInvalidatedByBiometricEnrollment(true)
+                .build())
+        }
+       return keyGenerator.generateKey()
+    }
+
+    @RequiresApi(Build.VERSION_CODES.M)
+    private fun getSecretKey(): SecretKey {
+        val keyStore = KeyStore.getInstance(ANDROID_KEY_STORE).apply { load(null) }
+        if (keyStore.getEntry(ANDROID_KEY_NAME, null) != null) {
+            val secretKeyEntry = keyStore.getEntry(ANDROID_KEY_NAME, null) as KeyStore.SecretKeyEntry
+            return (secretKeyEntry.secretKey ?: generateSecretKey()) as SecretKey
+        }
+        return generateSecretKey()
+    }
+
+    private fun getCipher(): Cipher {
+        return Cipher.getInstance(KeyProperties.KEY_ALGORITHM_AES + "/"
+                + KeyProperties.BLOCK_MODE_CBC + "/"
+                + KeyProperties.ENCRYPTION_PADDING_PKCS7)
+    }
+
+    private fun loadKeyStore(): KeyStore {
+        val keyStore = KeyStore.getInstance(ANDROID_KEY_STORE)
+        keyStore.load(null)
+        return keyStore
+    }
+
+
+    fun deleteKey() {
+        val keyStore: KeyStore = loadKeyStore()
+        try {
+            keyStore.deleteEntry(ANDROID_KEY_NAME)
+        } catch (e: KeyStoreException) {
+            e.printStackTrace()
+            throw e
+        }
+    }
 
 }

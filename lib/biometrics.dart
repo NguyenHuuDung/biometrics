@@ -16,7 +16,7 @@ class Biometrics {
   final Function(String)? authenBiometricsOn;
   final Function(String)? authenBiometricsOff;
   final Function(String)? canEvaluatePolicyFail;
-  final Function(String)? authenticateUserFail;
+  final Function(String, String)? authenticateUserFail;
   final Function(String)? notKeySave;
 
   Biometrics(
@@ -41,10 +41,11 @@ class Biometrics {
         canEvaluatePolicyFail!(call.arguments["message"]);
         break;
       case "authenticateUserFail":
-        authenticateUserFail!(call.arguments["message"]);
+        authenticateUserFail!(
+            call.arguments["message"], call.arguments["type"]);
         break;
       case "notKeySave":
-        authenticateUserFail!(call.arguments["message"]);
+        notKeySave!(call.arguments["message"]);
         break;
       default:
         throw UnimplementedError("Unimplemented ${call.method} method");

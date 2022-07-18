@@ -64,9 +64,10 @@ public class BiometricsBase: NSObject, FlutterPlugin {
         BiometricsBase.channel?.invokeMethod("canEvaluatePolicyFail", arguments: arguments)
     }
 
-    public func authenticateUserFail(message: String?) {
+    public func authenticateUserFail(message: String?,type: String?) {
          let arguments: [String: Any?] = [
             "message": message,
+            "type" : type
         ]
          BiometricsBase.channel?.invokeMethod("authenticateUserFail", arguments: arguments)
     }
@@ -99,20 +100,19 @@ public class BiometricsBase: NSObject, FlutterPlugin {
 
       func configWithSwitch(myString : String,isSwitch: Bool){
           touchMe = BiometricsAuth()
-          touchMe.authenticateUser(isCheckChange: false) { (success, message) in
+          touchMe.authenticateUser(isCheckChange: false) { (success, message,type) in
               if success {
                   self.touchMe.typeBiometricsAuth { (configuredStr, cancelString, pleaseConfigureString,success,fail)  in
                       DispatchQueue.main.async {
                           if isSwitch {
                             self.authenBiometricsOff(message:fail)
-                               
                           }else {
                              self.authenBiometricsOn(message:success) 
                           }
                       }
                   }
               }else {
-                 self.authenticateUserFail(message:message)
+                 self.authenticateUserFail(message:message,type: type)
               }
           }
       }
@@ -137,7 +137,7 @@ public class BiometricsBase: NSObject, FlutterPlugin {
                self.notKeySave(message:BiometricsAuth().vnptid_str_not_have_fingerprint_sensor)
             }
         }else {
-            touchMe.authenticateUser(isCheckChange: true) { (success, message) in
+            touchMe.authenticateUser(isCheckChange: true) { (success, message,type) in
                 if success {
                     self.touchMe.typeBiometricsAuth { (configuredStr, cancelString, pleaseConfigureString,success,fail)  in
                         if (self.touchMe.canEvaluatePolicy()) {
@@ -147,7 +147,7 @@ public class BiometricsBase: NSObject, FlutterPlugin {
                         }
                     }
                 }else {
-                        self.authenticateUserFail(message:message)
+                    self.authenticateUserFail(message:message, type: type)
                 }
             }
         }

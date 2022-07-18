@@ -16,7 +16,7 @@ class _AbcState extends State<Abc> {
       print("authenBiometricsOff: $authenBiometricsOff");
     }, canEvaluatePolicyFail: (canEvaluatePolicyFail) {
       print("canEvaluatePolicyFail : $canEvaluatePolicyFail");
-    }, authenticateUserFail: (authenticateUserFail) {
+    }, authenticateUserFail: (authenticateUserFail, type) {
       print("authenticateUserFail: $authenticateUserFail");
     }, notKeySave: (notKeySave) {
       print("notKeySave: $notKeySave");

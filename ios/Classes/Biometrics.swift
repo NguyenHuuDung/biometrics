@@ -65,7 +65,7 @@ class BiometricsAuth {
         return authError?.code != kLAErrorBiometryNotAvailable.hashValue
     }
     
-    func authenticateUser(isCheckChange: Bool, completion: @escaping (Bool,String?) -> Void) {
+    func authenticateUser(isCheckChange: Bool, completion: @escaping (Bool,String?,String?) -> Void) {
         
         guard canEvaluatePolicy() else {
             if BiometricsUtil.shared.isIPhoneX() {
@@ -93,16 +93,16 @@ class BiometricsAuth {
         let domainStateNew = context.evaluatedPolicyDomainState ?? Data()
         if !self.isCheckChangeFaIDTouchID() && isCheckChange {
             if BiometricsUtil.shared.isIPhoneX() {
-                completion(false,ChangeFaceID)
+                completion(false,ChangeFaceID,"Change")
             }else {
-                completion(false,ChangeTouchID)
+                completion(false,ChangeTouchID,"Change")
             }
         }else {
             context.localizedFallbackTitle = localizedFallbackTitle
             context.evaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, localizedReason: loginReason) { (success, evaluateError) in
                 if success {
                     DispatchQueue.main.async {
-                        completion(true,nil)
+                        completion(true,nil,"Success")
                         self.encodeAndSave(domainState: domainStateNew)
                     }
                 } else {
@@ -145,7 +145,7 @@ class BiometricsAuth {
                     }
                     print(message)
                     DispatchQueue.main.async {
-                        completion(false,message)
+                        completion(false,message,"Error")
                     }
                 }
                 

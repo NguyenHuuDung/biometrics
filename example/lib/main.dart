@@ -42,7 +42,7 @@ class _MyAppState extends State<MyApp> {
       print("authenBiometricsOff: $authenBiometricsOff");
     }, canEvaluatePolicyFail: (canEvaluatePolicyFail) {
       print("canEvaluatePolicyFail : $canEvaluatePolicyFail");
-    }, authenticateUserFail: (authenticateUserFail) {
+    }, authenticateUserFail: (authenticateUserFail, type) {
       print("authenticateUserFail: $authenticateUserFail");
     }, notKeySave: (notKeySave) {
       print("notKeySave: $notKeySave");
@@ -56,7 +56,7 @@ class _MyAppState extends State<MyApp> {
       print("authenBiometricsOff: $authenBiometricsOff");
     }, canEvaluatePolicyFail: (canEvaluatePolicyFail) {
       print("canEvaluatePolicyFail : $canEvaluatePolicyFail");
-    }, authenticateUserFail: (authenticateUserFail) {
+    }, authenticateUserFail: (authenticateUserFail, type) {
       print("authenticateUserFail: $authenticateUserFail");
     }, notKeySave: (notKeySave) {
       print("notKeySave: $notKeySave");
@@ -75,7 +75,7 @@ class _MyAppState extends State<MyApp> {
           children: [
             IconButton(
                 onPressed: () {
-                  authen(true);
+                  authen(false);
                 },
                 icon: Icon(Icons.access_alarm)),
             IconButton(
