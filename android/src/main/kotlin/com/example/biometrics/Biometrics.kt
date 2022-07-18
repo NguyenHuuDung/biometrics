@@ -24,7 +24,6 @@ import javax.crypto.SecretKey
 
 
 class Biometrics {
-    private val TRANSFORMATION = "AES/GCM/NoPadding"
     private val ANDROID_KEY_STORE = "AndroidKeyStore"
     private val ANDROID_KEY_NAME = "ANDROID_KEY_NAME"
     lateinit var channel : MethodChannel
@@ -178,7 +177,9 @@ class Biometrics {
             }
     }
 
-    fun loginBiometrics(isKeySave: Boolean, activity : FragmentActivity,channel : MethodChannel) {
+    @SuppressLint("NewApi")
+    @RequiresApi(Build.VERSION_CODES.M)
+    fun loginBiometrics(isKeySave: Boolean, activity : FragmentActivity, channel : MethodChannel) {
         this.channel = channel
         this.activity = activity
         if(!isKeySave) {
@@ -196,8 +197,8 @@ class Biometrics {
                         cipher.init(Cipher.ENCRYPT_MODE, secretKey)
                         biometricPrompt.authenticate(promptInfo,BiometricPrompt.CryptoObject(cipher))
                     } catch (keyper : KeyPermanentlyInvalidatedException) {
-                        authenticateUserFail("$keyper", "Change")
                         this.deleteKey()
+                        authenticateUserFail("$keyper", "Change")
                     } catch ( e: Exception) {
                         authenticateUserFail("$e", "Error")
                     }
