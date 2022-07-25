@@ -69,9 +69,9 @@ class BiometricsAuth {
         
         guard canEvaluatePolicy() else {
             if BiometricsUtil.shared.isIPhoneX() {
-                completion(false, self.PleaseFaceIDStr)
+                completion(false, self.PleaseFaceIDStr,"Error")
             }else {
-                completion(false, self.PleaseTouchIDStr)
+                completion(false, self.PleaseTouchIDStr,"Error")
             }
             return
         }
